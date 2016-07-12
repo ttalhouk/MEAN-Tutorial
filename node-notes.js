@@ -216,3 +216,179 @@ app.get("/tweets/:username", function(req, response){
     <li><%= tweet.text %></li>
     <%})%>
 </ul>
+
+// socket.io
+// npm install --save socket.io
+
+// starting a socket server
+var express = require('express');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+
+io.on('connection', function(client){
+  console.log("client connected...");
+  client.on('join', function(name){
+    client.nickname = name;
+  })
+  client.emit(messages, {hello: "world"});
+
+  client.on(messages, function(data){
+    console.log(data); // from the chat form
+    var nickname = client.nickname;
+    client.broadcast.emit('messages',nickname + ":" + data) // brodcast to all other clients
+    client.emit('messages',nickname + ":" + data) // emits back to client
+  });
+
+});
+
+app.get('/', function(req,res){
+  res.sendFile(__dirname + "/index.html");
+});
+server.listen(8080);
+
+// in index.html
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect('http://localhost:8080');
+  var server = io.connect('http://localhost:8080');
+
+  server.on('connect', function(data){
+    $('#status').html('connected');// adds connected if connection is made
+    nickname = prompt('What is your nickname?');
+    server.emit('join', nickname); // sends nickname to the server
+  })
+
+  socket.on('messages',function(data){ // listens for messages emitted
+    alert.(data.hello); // prints out world
+    insertMessage(data); // needs a function (jquery to add the data to the log)
+  });
+
+  $('#chat_form').on('submit',function(event){
+    var message = $('#chat_input').val();
+    socket.emit('messages', message);
+  })
+</script>
+
+// persistiing data using and array to collect last 10
+var messages = [];
+var storeMessage = function(name, data){
+  messages.push({name:name, data:data});
+  if (messages.length > 10){
+    messages.shift();
+  }
+}
+
+
+var express = require('express');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+
+io.on('connection', function(client){
+  console.log("client connected...");
+  client.on('join', function(name){
+    client.nickname = name;
+    messages.forEach(function(message){
+      client.emit("messages", message.name + ":" + message.data);
+    });
+  })
+
+  client.on(messages, function(data){
+    console.log(data); // from the chat form
+    var nickname = client.nickname;
+    client.broadcast.emit('messages',nickname + ":" + data) // brodcast to all other clients
+    client.emit('messages',nickname + ":" + data) // emits back to client
+    storeMessage(nickname, data)
+  });
+
+});
+
+app.get('/', function(req,res){
+  res.sendFile(__dirname + "/index.html");
+});
+server.listen(8080);
+
+// persistiing data using redis database
+// npm install redis --save
+var redis = require('redis');
+var client = redis.createClient();
+// setting database messages
+client.set('key1', 'value1');
+client.set('key2', 'value2');
+// getting data
+client.get("key1", function(err, reply){
+  console.log(reply);
+})
+// adding stings to the message list
+var message = "test message";
+client.lpush("messages", message, function(err, reply){ // callback optional
+  console.log(reply); // returns the length of the list in the DB
+  client.ltrim("messages",0,1); // keeps onlyt the first 2 messages
+});
+
+// retreiving from list
+client.lrange("messages",0,-1,function(err, messages){
+  console.log(messages); // array of values
+});
+
+// redis sets
+// adding and removing
+
+client.sadd("names", "dog");
+client.sadd("names", "cat");
+client.sadd("names", "bird");
+client.srem("names", "bird"); // removes bird
+
+// reply with all in set
+client.smembers("names", function(err,names){
+  console.log(names); // ["dog","cat"]
+})
+
+///////////////////////////////////////////////
+
+
+
+
+var express = require('express');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+var redisClient = redis.createClient();
+
+var storeMessage = function(name, data){
+  var message = JSON.stringify({name:name, data:data});
+  redisClient.lpush("messages",message,function(err,response){
+    redisClient.ltrim('messages',0,9);// keeps newest 10
+  })
+
+};
+
+io.on('connection', function(client){
+  console.log("client connected...");
+  client.on('join', function(name){
+    client.nickname = name;
+    redisClient.lrange('messages',0,-1, function(err,messages){
+      messages.reverse();
+      messages.forEach(function(message){
+        message = JSON.parse(message);
+        client.emit("messages", message.name + ":" + message.data);
+      });
+    });
+  });
+
+  client.on(messages, function(data){
+    console.log(data); // from the chat form
+    var nickname = client.nickname;
+    client.broadcast.emit('messages',nickname + ":" + data) // brodcast to all other clients
+    client.emit('messages',nickname + ":" + data) // emits back to client
+    storeMessage(nickname, data)
+  });
+
+});
+
+app.get('/', function(req,res){
+  res.sendFile(__dirname + "/index.html");
+});
+server.listen(8080);
