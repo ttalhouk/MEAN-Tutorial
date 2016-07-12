@@ -9,7 +9,21 @@ Collection have Documents ~= Rows in SQL
 > Documents can have different.  
 This is known as Data Dynamic Schema
 
-Note: to install go to go.codeschool.com/download-mongodb
+Start a mongo server
+``` shell
+$ mongod
+>
+
+```
+if there are problems starting the server make sure your dbpath is set
+``` shell
+$ sudo mkdir -p /data/db
+// may need the following command as well for permissions
+$ sudo chown $USER /data/db
+```
+
+then
+
 ``` shell
 $ mongo
 >
