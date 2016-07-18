@@ -131,6 +131,8 @@ $(function(){
 ```
 
 **Custom Middleware**
+
+Write middleware and export like this...
 ```Javascript
 module.exports = function (req, res, next){
   var start = +new Date(); // + converts Date to millisec
@@ -146,3 +148,5 @@ module.exports = function (req, res, next){
   next();
 };
 ```
+
+then require it in app.js `var logger = require('./logger');` then use `app.use(logger);`

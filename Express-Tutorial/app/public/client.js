@@ -1,10 +1,12 @@
 $(function(){
   $.get('/blocks', appendToList);
-  function appendToList(data){
+  function appendToList(blocks){
+    console.log(blocks.length);
     var list = [];
-    for (var i; i < data.length; i+=1){
-      list.push($('<li>',{ text: data[i] }));
+    for (var i = 0; i < blocks.length; i+=1){
+      list.push($('<li>',{ text: blocks[i] }));
     }
+    console.log(list);
     $('.blocks-list').append(list)
   };
 });
