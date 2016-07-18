@@ -89,3 +89,60 @@ app.get('/blocks', function(req, res){
 });
 ```
 ## Middleware  
+
+**Serving HTML file**  
+```Javascript
+app.get('/', function(req, res){
+  res.sendFile(__dirname + "/public/index.html");
+  // sends the file
+});
+```
+`__dirname` is the directory the app.js script is located in
+
+Alternatly we could use the static Middleware that comes with express
+```Javascript
+
+app.use(express.static("public"));
+  // sends all files within the folder specified
+
+```
+
+*Middleware* are functions that execute sequentially that access the request/response information prior to hitting the route.  Middleware is called with `.use` and is formatted like the following example:
+```Javascript
+app.use(function(req, res, next){
+  // code goes here to validate, parse, etc...
+  next(); // sends req, res to next middleware function... must be called
+});
+```
+Once the send function is called responding back to the client, no other middleware or routes are run.
+
+**AJAX calls**  
+```Javascript
+$(function(){
+  $.get('/blocks', appendToList);
+  function appendToList(data){
+    var list = [];
+    for (var i; i < data.length; i+=1){
+      list.push($('<li>',{ text: data[i] }));
+    }
+    $('.blocks-list').append(list)
+  };
+});
+```
+
+**Custom Middleware**
+```Javascript
+module.exports = function (req, res, next){
+  var start = +new Date(); // + converts Date to millisec
+  var stream = process.stdout;
+  var url = req.url;
+  var method = req.method;
+  res.on('finish', function(){
+    var duration = +new Date() - start;
+    var message = method + " to " + url + " took " + duration + " ms. \n\n";
+    stream.write(message); // writes to message stream
+  })
+
+  next();
+};
+```
