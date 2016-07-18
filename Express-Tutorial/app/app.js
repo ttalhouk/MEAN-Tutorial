@@ -9,9 +9,42 @@ var logger = require('./logger');
 // });
 app.use(logger);
 app.use(express.static("public"));
+
+var blocks = {
+  'Fixed': "Block secured in place",
+  'Movable': "Capable of being moved",
+  'Rotate': "Moving about an axis"
+}
+var locations = {
+  'Fixed': "1st floor",
+  'Movable': "2nd floor",
+  'Rotate': "3rd floor"
+}
+
+app.params('name',function(req, res, next){
+  var name = request.params.name
+  var block = name[0].toUpperCase() + name.slice(1).toLowerCase;
+  req.blockName = block;
+  next();
+})
+
+app.get('/blocks/:name', function(req, res){
+  var description = blocks[req.blockName];
+  if (!description){
+    res.status(404).json("No description for " + request.params.name + " was found");
+  } else {
+    res.json(description);
+  }
+});
+
 app.get('/blocks', function(req, res){
-  var blocks = ['element1', 'element2', 'element3'];
-  res.send(blocks); // converts array to JSON
+  var blocks = ['Fixed', 'Movable', 'Rotate'];
+
+  if(req.query.limit >= 0){
+    res.json(blocks.slice(0, req.query.limit));
+  } else {
+    res.json(blocks); // responds with json formating explicitly
+  }
 });
 
 

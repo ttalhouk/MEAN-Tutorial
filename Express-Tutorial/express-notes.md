@@ -150,3 +150,92 @@ module.exports = function (req, res, next){
 ```
 
 then require it in app.js `var logger = require('./logger');` then use `app.use(logger);`
+
+a library for logging can be found at  
+[Morgan]: https://github.com/expressjs/morgan
+
+## Reading Data from URL (Params)  
+GET requests can have query string parameters such as making a query to our blocks route and adding a `/blocks?limit=1` to return only one element.  The query can be accessed through `(response argument).query`.  For example:
+
+```Javascript
+app.get('/blocks', function(req, res){
+  var blocks = ['element1', 'element2', 'element3'];
+
+  if(req.query.limit >= 0){
+    res.json(blocks.slice(0, req.query.limit));
+  } else {
+    res.json(blocks); // responds with json formating explicitly  
+  }
+});
+```
+
+If we want specific url for items we can do the following...
+
+```Javascript
+var blocks = {
+  'Fixed': "Block secured in place",
+  'Movable': "Capable of being moved",
+  'Rotate': "Moving about an axis"
+}
+
+app.get('/blocks/:name', function(req, res){
+  var description = blocks[request.params.name];
+  res.json(description);
+});
+```
+
+This will give the description when the name is passed as params.  If name is not valid, we will want to send a 404 status code.  To do this...
+
+```Javascript
+app.get('/blocks/:name', function(req, res){
+  var description = blocks[request.params.name];
+  if (!description){
+    res.status(404).json("No description for " + request.params.name + " was found");
+  } else {
+    res.json(description);
+  }
+});
+```
+**Normalizing Request Params**  
+To be able to accept different cases, you may want to normalize the input.
+```Javascript
+app.get('/blocks/:name', function(req, res){
+  var name = request.params.name
+  var block = name[0].toUpperCase() + name.slice(1).toLowerCase;
+  var description = blocks[block];
+  if (!description){
+    res.status(404).json("No description for " + request.params.name + " was found");
+  } else {
+    res.json(description);
+  }
+});
+```
+Instead of doing this normaization within the route, the app has access to the params.
+```javascript
+app.params('name',function(req, res, next){
+  var name = request.params.name
+  var block = name[0].toUpperCase() + name.slice(1).toLowerCase;
+  req.blockName = block;
+  next();
+})
+
+app.get('/blocks/:name', function(req, res){
+  var description = blocks[req.blockName];
+  if (!description){
+    res.status(404).json("No description for " + request.params.name + " was found");
+  } else {
+    res.json(description);
+  }
+});
+
+// can use the same middleware
+app.get('/locations/:name', function(req, res){
+  var location = locations[req.blockName];
+  if (!description){
+    res.status(404).json("No description for " + request.params.name + " was found");
+  } else {
+    res.json(description);
+  }
+});
+
+```
