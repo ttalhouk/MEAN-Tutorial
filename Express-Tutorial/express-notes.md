@@ -305,5 +305,56 @@ Alternately we can chain the routes like so
 app.route('/blocks') // remove ; and variable declaration for route name
   .get(function(...){...})
   .post(parseUrlEncoded, function(...){...});
-
 ```
+
+## Route Files
+
+In express you can extract routes into files and use them as modules for app.use to run.
+
+```javascript
+var blocks = require('.routes/blocks');
+app.use('/blocks', blocks) // use the blocks module to run the /blocks route
+```
+1. Make dedicated folder for routes
+  - inside folder make route file
+
+```javascript
+// blocks.js
+
+var express = require('express');
+var router = express.Router(); // returns router middleware that can be mounted anywhere
+// Moved from app.js needed block modulet
+
+var parser = require('body-parser'); // access to body-parser methods
+var parseUrlEncoded = parser.urlencoded({ extended: false }); // forces use of node querystring parser
+
+// and data
+var blocks = {
+  'Fixed': "Block secured in place",
+  'Movable': "Capable of being moved",
+  'Rotate': "Moving about an axis"
+};
+var locations = {
+  'Fixed': "1st floor",
+  'Movable': "2nd floor",
+  'Rotate': "3rd floor"
+};
+
+// moving routes from app.js
+router.route('/') // root directory which is '/blocks'
+  .post(parseUrlEncoded, function(req, res){  })
+  .get(function(req, res){  });
+
+router.route('/:name') // root directory which is '/blocks' making this /blocks/:name
+  .all(function(req, res, next){   })
+  .get(function(req, res){  })
+  .delete(function(req, res){  });
+
+module.exports = router;// exports router as node module
+```
+
+## Further content
+
+- [Express JS Website]: http://expressjs.com - Express API info
+
+- [Morgan]: https://github/expressjs/morgan - Logger for express
