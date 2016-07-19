@@ -212,7 +212,7 @@ app.get('/blocks/:name', function(req, res){
 ```
 Instead of doing this normaization within the route, the app has access to the params.
 ```javascript
-app.params('name',function(req, res, next){
+app.param('name',function(req, res, next){
   var name = request.params.name
   var block = name[0].toUpperCase() + name.slice(1).toLowerCase;
   req.blockName = block;
@@ -237,5 +237,73 @@ app.get('/locations/:name', function(req, res){
     res.json(description);
   }
 });
+
+```
+
+## Post requests
+
+To parse data sent in post requests install body-parser:  
+`npm install body-parser`  
+This will add it to the express app.  Next require it in the app.  
+`var parser = require('body-parser')`  
+
+Posts can take multiple handlers as arguments and will call them sequentially.  
+```javascript
+var parsUrlEncoded = parser.urlencoded({ extended: false });
+// forces use of node query parser
+
+app.post('/blocks', parseUrlEncoded, function(req, res){
+  var newBlock = req.body // serialized data sent from ajax request
+  blocks[newBlock.name] = newBlock.description;
+  res.status(201).json(newBlock.name);
+})
+```
+## Delete requests
+
+Add anchor tag to element that should be deleted and create ajax request to handle targeting
+
+```javascript
+$('.blocks-list').on('click', 'a[data-block]', function(e){
+  if(!confirm('Are you sure?')){ // confirmation of delete
+    return false
+  };
+  var target = $(e.currentTarget)
+  $.ajax({
+    type: "DELETE",
+    url: "/blocks/"+ target.data('block')
+  }).done(function(){
+    target.parents('li').remove() // removes target li item
+  });
+});
+```
+
+set up express route in app.js
+```javascript
+app.delete('/blocks/:name', function(req, res){
+  delete blocks[req.blockName]; // from app.param
+  res.sendStatus(200); // use sendStatus to send status and res.body = OK
+});
+```
+
+## Route instances
+
+To remove duplication in route names use route instances
+```javascript
+var blocksRoute = app.route('/blocks');
+// blocksRoute now replaces app.get('/blocks', ...) and app.post('/blocks', ...)
+// like this
+
+blocksRoute.get(function(...){...});
+
+blocksRoute.post(parseUrlEncoded, function(...){...});
+```
+
+**Chaining Routes**  
+
+Alternately we can chain the routes like so
+```javascript
+app.route('/blocks') // remove ; and variable declaration for route name
+  .get(function(...){...})
+  .post(parseUrlEncoded, function(...){...});
 
 ```
