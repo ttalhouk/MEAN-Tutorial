@@ -134,3 +134,67 @@ var gems = [{...},{...}]
   </div>
 </body>
 ```
+
+## Piping Expressions through Filters
+
+If we wanted the price value to have a currency with 2 decimals, we could apply the currency value using pipe:
+
+`<h2>{{product.price | currency}}</h2>`
+
+currency will send product.price through the currency filter and localize the currency symbol and decimals.
+
+**Filter Format**
+
+`value | filter:options`
+
+## Forms and Models
+
+Updating fields real time
+```html
+<form name="reviewForm">
+  <blockquote>
+    <b>Stars: {{review.stars}}</b>
+    </br>
+    {{review.body}}
+    </br>
+    <cite>- {{review.author}}</cite>
+  </blockquote>
+
+  <select ng-model="review.stars">
+    <option value="1">1 star</option>
+    <option value="2">2 stars</option>
+    <option value="3">3 stars</option>
+    <option value="4">4 stars</option>
+    <option value="5">5 stars</option>
+  </select>
+  <textarea ng-model="review.body"></textarea>
+  <label>by:</label>
+  <input type="email" ng-model="review.author"/>
+  <input type="submit" value="Submit">
+</form>
+
+```
+
+
+
+
+
+**List of Directives**
+
+* `ng-app="[app name]"` - sets app module to page
+* `ng-controller="[controller name] as [alias]"` - sets controller to the section under the alias
+* `ng-show/hide="[controller.expression]"` - sets visibility based on expression
+* `ng-repeat="[object singular] in [controller.objectsArray]"` - repeats section for each object in the array  
+* `ng-src="{{expression}}"` -  used to load entire expression
+* `ng-click="[var] = value"` - useful for adding values to tabs or links
+* `ng-init="[var] = value"` - sets initial value for variable.  Useful for prototyping but should be done in controller.
+* `ng-class="{[className]:[condition]}"` -  if condition is true set the class to the element
+* `ng-model` - binds field with tag
+
+**List of Filters**
+
+* `currency` - formats value into local currency
+* `date:'MM/dd/yyyy @ h:mm'` - formats date
+* `uppercase/lowercase` - converts to all uppercase or lowercase
+* `limitTo:#` - limits characters in a string or items in an array
+* `orderBy: '(-)(key)'` - orders list by key value '-' is desc no '-' is asc
