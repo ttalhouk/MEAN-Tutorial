@@ -172,10 +172,174 @@ Updating fields real time
   <input type="email" ng-model="review.author"/>
   <input type="submit" value="Submit">
 </form>
-
 ```
 
+**Accepting Submissions**
 
+Start off creating a controller for the review form and use `ng-submit` to capture the form information.
+
+```html
+<form name="reviewForm" ng-controller="reviewController as reviewCtrl" ng-submit="reviewCtrl.addReview(product)">
+```
+Update app.js to add the controller and submit function.
+```javascript
+app.controller('reviewController', function(){
+  this.review = {};
+  this.addReview = function(product){
+    product.reviews.push(this.review);
+    // this.review is the context from the function call
+  };
+});
+```
+Next we need to clear the form fields. To do this set this.review to an empty object after the review is pushed onto the array.
+```javascript
+app.controller('reviewController', function(){
+  this.review = {};
+  this.addReview = function(product){
+    product.reviews.push(this.review);
+    this.review = {}; // resets the form
+  };
+});
+```
+
+**Form Validations**  
+First turn off default valdiations using `novalidate` and add `required` to the fields that are required.
+
+To check it is validating correctly you can add...
+```html
+<div>
+  reviewForm is {{reviewForm.$valid}}
+</div>
+```
+Which will print the Validity.  This is because reviewForm is the form name, and `$valid` is a built in property we are calling on it.
+
+We can use this to disable the submit until the form is valid like so...
+```html
+<div>
+<form name="reviewForm" ng-controller="reviewController as reviewCtrl" ng-submit="reviewForm.$valid && reviewCtrl.addReview(product)" novalidate>
+</div>
+```
+Can add CSS to borders to help show if valid or not using angular classes.
+```CSS
+.ng-invalid.ng-dirty{
+  border-color: red;
+}
+.ng-valid.ng-dirty{
+  border-color: green;
+}
+```
+
+## Directives
+
+**HTML snippits**
+
+You can move repeated lines of html into snippits/partials
+```html
+<!-- product-title.html  snippit-->
+{{product.name}}
+<em class="pull-right">{{product.price | currency}}</em>
+```
+Then use `ng-include` to bring the snippit in
+```html
+<h3 ng-include="'product-title.html'">          <!-- pulled out into product-title.html snippit{{product.name}}
+  <em class="pull-right">{{product.price | currency}}</em>-->
+
+</h3>
+```
+
+This can also be achieved using custom directives.  
+```html
+<product-title></product-title>
+```
+This needs to be defined in app.js
+```javascript
+app.directive('productTitle',function(){
+  return{
+    restrict: 'E', // defines type of directive "E" element
+    templateUrl: 'product-title.html'
+  };
+});
+```
+There are also attribute directives that can be applied to elements and call on the template, which looks like this.
+
+```html
+<h3 product-title></h3>
+<!-- wraps product-title in the h3 tag -->
+```
+This needs to be defined in app.js
+```javascript
+app.directive('productTitle',function(){
+  return{
+    restrict: 'A', // defines type of directive "A" attribute
+    templateUrl: 'product-title.html'
+  };
+});
+```
+**Directive Controllers**
+
+Contollers can be defined within the directive
+```javascript
+app.directive('productPanels',function(){
+  return{
+    restrict:'E',
+    templateUrl:'product-panels.html',
+    controller: function(){ // controller function
+      this.tab = 1;
+      this.selectTab = function(setTab){
+        this.tab = setTab;
+      };
+      this.isSelected = function(setTab){
+        return this.tab === setTab;
+      }
+    },
+    controllerAs:'panel' //alias
+  };
+});
+```
+
+## Dependencies
+
+When moving directives/controllers to another file, you need to update the Dependencies in the app file to bring them in.
+```javascript
+// in app.js
+  var app = angular.module('store',['store-products']);
+  // add store-products module to handle products
+```
+Also include the new file in the HTML
+```HTML
+<script type="text/javascript" src="products.js"> </script>
+```
+
+**Services**
+
+Services begin with $ such as...
+* `$http` -  http json fetch request from web service
+* `$log` - log to console
+* `$filter` - filter array
+
+*`$http` Service*
+
+`$http({method:'GET', url:'/products.json'});`  
+or Shortcut  
+`$http.get('/products.json',{ apiKey: 'myApiKey' });`
+
+These return promisses
+
+**Telling Controllers what Services are Needed**  
+
+Using array syntax
+
+```javascript
+app.contoller('someContoller',[$http,function($http){
+  var store = this;
+  store.products = []; // initiallize value
+  // this.products = gems;
+
+  $http.get('/products.json').success(function(data){
+    store.products = data;
+  });
+}]);
+```
 
 
 
@@ -190,6 +354,11 @@ Updating fields real time
 * `ng-init="[var] = value"` - sets initial value for variable.  Useful for prototyping but should be done in controller.
 * `ng-class="{[className]:[condition]}"` -  if condition is true set the class to the element
 * `ng-model` - binds field with tag
+* `ng-submit` - allows function call upon submission
+* `ng-pristine` - input field has not been touched add to class turns to `ng-dirty` when input is typed
+* `ng-invalid` - input field is invalid add to class turns to `ng-valid` once valid
+* `ng-include="'[file snippit]'"` - brings partials in
+
 
 **List of Filters**
 
