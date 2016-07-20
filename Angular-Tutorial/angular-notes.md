@@ -299,7 +299,47 @@ app.directive('productPanels',function(){
 
 ## Dependencies
 
+When moving directives/controllers to another file, you need to update the Dependencies in the app file to bring them in.
+```javascript
+// in app.js
+  var app = angular.module('store',['store-products']);
+  // add store-products module to handle products
+```
+Also include the new file in the HTML
+```HTML
+<script type="text/javascript" src="products.js"> </script>
+```
 
+**Services**
+
+Services begin with $ such as...
+* `$http` -  http json fetch request from web service
+* `$log` - log to console
+* `$filter` - filter array
+
+*`$http` Service*
+
+`$http({method:'GET', url:'/products.json'});`  
+or Shortcut  
+`$http.get('/products.json',{ apiKey: 'myApiKey' });`
+
+These return promisses
+
+**Telling Controllers what Services are Needed**  
+
+Using array syntax
+
+```javascript
+app.contoller('someContoller',[$http,function($http){
+  var store = this;
+  store.products = []; // initiallize value
+  // this.products = gems;
+
+  $http.get('/products.json').success(function(data){
+    store.products = data;
+  });
+}]);
+```
 
 
 
