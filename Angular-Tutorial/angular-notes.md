@@ -330,7 +330,7 @@ These return promisses
 Using array syntax
 
 ```javascript
-app.contoller('someContoller',[$http,function($http){
+app.contoller('someContoller',['$http',function($http){
   var store = this;
   store.products = []; // initiallize value
   // this.products = gems;
