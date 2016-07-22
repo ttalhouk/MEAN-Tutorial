@@ -190,6 +190,133 @@ To not search the entire Dom and only the card template use `element`
 ```
 attrs refer to element attributes such as 'header' in this case.
 
+## Services
+
+Create a js file in the services folder to hold the services for the app.  Include this in the index html file in a `<script>` tag.
+```html
+<script src="/javascript/services/note.js"></script>
+```
+
+*Services are typically Factories or Providers*
+
+* ***Factory***: Used to share functions across the application
+* ***Provider***: Used to share functions across the application and allows for configuration
+
+### Creating a Factory
+
+```javascript
+angular.module("<ModuleName>")
+.factory("<ServiceName>", function <ServiceName>Factory() {
+  return { <object containing shared functions> }
+});
+```
+
+```javascript
+// in note.js (services)
+angular.module("NoteWrangler")
+  .factory("Note", function NoteFactory() {
+    return {
+      all: function() { // now Note.all can be used to get all notes
+        return $http({method: "GET", url: "/notes"});
+      },
+      create: function(){ // now Note.create can be used to create a note
+        return $http({method: "POST", url: "/notes", data: note});
+      };
+    };
+  });
+```
+Now use in the controller like so...
+```javascript
+// in notes-index-controller.js
+angular.module('NoteWrangler')
+.controller("NotesIndexController", function($scope, Note) {
+  // Note service injected into controller
+  Note.all() // call Note.all function
+    .success(function(data) {
+      $scope.notes = data;
+    });
+});
+
+```
+
+### Using external Services (API)
+
+If we want to use Gravitar API we can create a service to call it when needed.
+
+```javascript
+// set up gravitar.js service
+// to get gravatar for users
+// Needs:
+
+// 1. Hash user’s email into a hash.
+// alyssa@codeschool.com bf4ee76b5f3a6bfed26bca5460bc3f22
+//  CryptoJS.MD5(email)
+// Include in Index with script tag
+//<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
+
+// 2. Add this hash onto a Gravatar URL.
+//  http://www.gravatar.com/avatar/bf4ee...png
+// 3. Use this URL in a template.
+//  <img ng-src='http://...bf4ee...png'/>
+// create the url from the pieces given
+
+angular.module("NoteWrangler")
+  .factory( "Gravatar",function GravatarFactory() {
+    // factory variables
+    var avatarSize = 80; // Default size
+    var avatarUrl = "http://www.gravatar.com/avatar/"; // base url
+    return{
+      generate: function(email){
+        return avatarUrl + CryptoJS.MD5(email) + "?size=" + avatarSize.toString();
+      }
+    };
+  });
+
+  // to use, inject the factory and call it like so...
+
+  //Gravatar.generate("[email address]")
+```
+
+### Providers
+
+Providers use `$get` function to configure function
+
+To create a provider (from the previous factory):
+
+```javascript
+angular.module("NoteWrangler")
+  .provider("Gravatar", function GravatarProvider() {
+    var avatarSize = 80; // Default size
+    var avatarUrl = "http://www.gravatar.com/avatar/";
+
+    this.setSize = function(size){
+      avatarSize = size;
+    }; // sets configurable size
+
+
+    this.$get = function() {
+      return function(email){
+        return avatarUrl + CryptoJS.MD5(email) + "?size=" + avatarSize.toString();
+      };
+    }
+  });
+```
+```javascript
+// in app.js
+.config(function (GravatarProvider) { // note use whole name of provider
+ GravatarProvider.setSize(100); // setting the variable
+});
+```
+
+### $Resource
+
+`ngResource` covers many of the reusable resources.  It gets added to the vendor directory.  This needs to be included with the script tag in the index file.
+
+`  <script src="/javascript/vendor/angular-resource.js"></script>`
+
+In app.js include it as a resource.
+`angular.module("NoteWrangler", ['ngRoute','ngResource'])`
+
 **Directives**
 
 * `ng-href='#/path'` - sets an ref link to a tag
